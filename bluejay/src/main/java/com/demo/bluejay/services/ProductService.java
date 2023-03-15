@@ -2,11 +2,11 @@ package com.demo.bluejay.services;
 
 import java.util.List;
 
-import com.demo.bluejay.entities.Courses;
+import com.demo.bluejay.entities.Products;
 
 public interface ProductService {
-public List<Courses> getCourses(); 
-public Courses getCourse(long courseId); 
-public Courses addCourses(Courses course);
-public Courses updateCourse(Courses course);
+public List<Products> getProducts(); 
+public Products getProduct(long courseId); 
+//public Products getProducts(Products course);
+public Products addProducts(Products course);
 }

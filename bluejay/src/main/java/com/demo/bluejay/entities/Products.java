@@ -1,19 +1,25 @@
 package com.demo.bluejay.entities;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
-public class Courses {
+
+@Entity
+public class Products {
+	
+	@Id
 	private long id;
 	private String product;
 	private int price;
 	
-	public Courses(long id, String product, int price) {
+	public Products(long id, String product, int price) {
 		super();
 		this.id = id;
 		this.product = product;
 		this.price = price;
 	}
 
-	public Courses() {
+	public Products() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
@@ -26,11 +32,11 @@ public class Courses {
 		this.id = id;
 	}
 
-	public String getProductString() {
+	public String getProduct() {
 		return product;
 	}
 
-	public void setProductString(String product ) {
+	public void setProduct(String product) {
 		this.product = product;
 	}
 
