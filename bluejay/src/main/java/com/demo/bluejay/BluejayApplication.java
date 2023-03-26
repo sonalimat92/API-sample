@@ -13,10 +13,10 @@ public class BluejayApplication  extends SpringBootServletInitializer{
 	public static void main(String[] args) {
 		SpringApplication.run(BluejayApplication.class, args);
 	}
-	
 	 @Override
-	    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-	        return builder.sources(BluejayApplication.class);
-	    }
-
+	   protected SpringApplicationBuilder configure(SpringApplicationBuilder 
+	   application) {
+	      return application.sources(BluejayApplication.class);
+	   }
+	
 }

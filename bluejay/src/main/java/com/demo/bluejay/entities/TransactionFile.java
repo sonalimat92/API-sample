@@ -1,5 +1,6 @@
 package com.demo.bluejay.entities;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.util.UUID;
 
@@ -32,7 +33,7 @@ public TransactionFile() {
 
 
     @Column(name="amount")
-	    private Double amount;
+	    private BigDecimal amount;
 
 
     @Column(name="network")
@@ -53,12 +54,12 @@ public TransactionFile() {
 
 
 
-	public Double getAmount() {
+	public BigDecimal getAmount() {
 		return amount;
 	}
 
 
-	public void setAmount(Double amount) {
+	public void setAmount(BigDecimal amount) {
 		this.amount = amount;
 	}
 

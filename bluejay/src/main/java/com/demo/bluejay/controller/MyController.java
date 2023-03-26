@@ -1,9 +1,14 @@
 package com.demo.bluejay.controller;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,8 +26,13 @@ import com.opencsv.exceptions.CsvValidationException;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.hibernate.boot.model.source.internal.hbm.Helper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,10 +51,15 @@ import com.demo.bluejay.entities.Products;
 import com.demo.bluejay.entities.Record;
 import com.demo.bluejay.entities.SettlementFile;
 import com.demo.bluejay.entities.TransactionFile;
+import com.demo.bluejay.helper.HelperSuite;
 import com.demo.bluejay.services.ProductService;
+import com.demo.bluejay.services.ReconciliationService;
 
 @RestController
 public class MyController {
+	
+	@Autowired
+	private HelperSuite helperSuite;
 
 	@Autowired
 	private ProductService productServ;
@@ -127,8 +142,14 @@ public class MyController {
 	    public ResponseEntity<String> transactionUpload(@RequestParam("file") MultipartFile file)  {
 	        try {
 	            if (file == null) {
-	                throw new IllegalArgumentException("File cannot be null");
+		               return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("File cannot be null");
 	            }
+	            System.out.println(file.getOriginalFilename());
+	            if(!file.getContentType().equals("text/csv")) {
+		               return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid file format");
+	            }
+	            
+	            helperSuite.uploadFile(file);
 
 	            // read CSV file into a list of Records
 				
@@ -138,7 +159,10 @@ public class MyController {
 	            String[] headerRow = csvReader.readNext();
 
 	            if (!Arrays.equals(headerRow, new String[] { "Id","Amount", "Network","Mode","TransactionDate","transactionId"})) {
-	                throw new IllegalArgumentException("Invalid CSV file format");
+	               return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid CSV file format");
+	            	//throw new IllegalArgumentException("Invalid CSV file format");
+	                
+	                
 	            }
 
 	            List<TransactionFile> transactionFiles = new ArrayList<>();
@@ -148,7 +172,7 @@ public class MyController {
 	            while ((row = csvReader.readNext()) != null) {
 	                TransactionFile transactionFile = new TransactionFile();
 	               // transactionFile.setId(Long.parseLong(row[0]));
-	                transactionFile.setAmount(Double.parseDouble(row[1]));
+	                transactionFile.setAmount(BigDecimal.valueOf(Double.valueOf(row[1])));
 	                transactionFile.setNetwork(row[2]);
 	                transactionFile.setMode(row[3]);
 	                transactionFile.setTransactionDate(row[4]);
@@ -162,19 +186,38 @@ public class MyController {
 	            transactionRepository.saveAll(transactionFiles);
 
 	            return ResponseEntity.ok("CSV file uploaded successfully");
-
-	             } catch (Exception e) {
+	            
+	            } catch (Exception e) {
 	                 throw new RuntimeException("Failed to upload CSV file", e);
 	             }
 	         }
-	   
+	   @GetMapping("/download-csv")
+	   public ResponseEntity<Resource> downloadCsv(@RequestParam("filename") String fileName) throws IOException {
+	       File csvFile = new File("./src/main/resources/static/" + fileName); // replace with your file path
+	       if (!csvFile.exists()) {
+	           throw new FileNotFoundException("CSV file not found");
+	       }
+	       Path csvFilePath = csvFile.toPath();
+	       ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(csvFilePath));
+	       return ResponseEntity.ok()
+	               .contentLength(csvFile.length())
+	               .contentType(MediaType.parseMediaType("text/csv"))
+	               .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + csvFile.getName() + "\"")
+	               .body(resource);
+	   }
 	   @PostMapping("/settlementupload")
 	    public ResponseEntity<String> settlementUpload(@RequestParam("file") MultipartFile file)  {
 	        try {
 	            if (file == null) {
 	                throw new IllegalArgumentException("File cannot be null");
 	            }
-
+                
+	            System.out.println(file.getOriginalFilename());
+	            if(!file.getContentType().equals("text/csv")) {
+		               return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid file format");
+	            }
+	            
+	            helperSuite.uploadFile(file);
 	            // read CSV file into a list of Records
 				
 	        	InputStreamReader isr = new InputStreamReader(file.getInputStream());
@@ -182,7 +225,7 @@ public class MyController {
 
 	            String[] headerRow = csvReader.readNext();
 
-	            if (!Arrays.equals(headerRow, new String[] { "Id","Amount", "Network","Mode","TransactionDate","transactionId"})) {
+	            if (!Arrays.equals(headerRow, new String[] { "Id","Amount", "Network","Mode","TransactionDate","transactionId","settlementId"})) {
 	                throw new IllegalArgumentException("Invalid CSV file format");
 	            }
 
@@ -193,7 +236,7 @@ public class MyController {
 	            while ((row = csvReader.readNext()) != null) {
 	            	SettlementFile settlementFile = new SettlementFile();
 	               // transactionFile.setId(Long.parseLong(row[0]));
-	            	settlementFile.setNetamount(Double.parseDouble(row[1]));
+	            	settlementFile.setNetamount(BigDecimal.valueOf(Double.valueOf(row[1])));
 	            	settlementFile.setNetwork(row[2]);
 	            	settlementFile.setMode(row[3]);
 	            	settlementFile.setSettlementfiledate(row[4]);
@@ -212,6 +255,23 @@ public class MyController {
 	                 throw new RuntimeException("Failed to upload CSV file", e);
 	             }
 	         }
+	   @Autowired
+	    private ReconciliationService reconciliationService;
+
+	    @PostMapping("/reconcile")
+	    public ResponseEntity<String> reconcile()
+	                                         {
+	        try {
+	           
+
+	            // Process the uploaded files for reconciliation
+	            reconciliationService.reconcile();
+
+	            return ResponseEntity.ok("Reconciliation completed successfully!");
+	        } catch (Exception e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reconciling files: " + e.getMessage());
+	        }
+	    }
 		//update the courses
 			//	@PutMapping("/products")
 			//	public ResponseEntity<HttpStatus> updateProducts(@RequestBody Products course){

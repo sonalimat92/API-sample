@@ -10,7 +10,6 @@
 	</parent>
 	<groupId>com.demo</groupId>
 	<artifactId>bluejay</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
 	<name>bluejay</name>
 	  <packaging>war</packaging>
 	<description>Demo project for Spring Boot</description>
@@ -80,13 +79,44 @@
   
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
+     
+    <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+        <manifest>
+                <packageName>com.demo.bluejay</packageName>
+                <mainClass>com.demo.bluejay.BluejayApplication</mainClass>
+                <addClasspath>true</addClasspath>
+            </manifest>
+            
+            
+        </configuration>
+          <executions>
+      <execution>
+      <goals>
+         <goal>repackage</goal>
+      </goals>
+      </execution>
+   </executions>
+    </plugin>
+
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-war-plugin</artifactId>
             <version>3.0.0</version>
             <configuration>
-                <attachClasses>true</attachClasses>
-            </configuration>
+        <archive>
+            <manifest>
+                <packageName>com.demo.bluejay</packageName>
+                 <mainClass>com.demo.bluejay.BluejayApplication</mainClass>
+            </manifest>
+            <manifestEntries>
+                <Created-By>sonali</Created-By>
+            </manifestEntries>
+        </archive>
+        <attachClasses>true</attachClasses>
+    </configuration>
         </plugin>
  
         <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
@@ -124,6 +154,7 @@
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.0.0</version>
         </plugin>
+       
       </plugins>
     </pluginManagement>
   </build>

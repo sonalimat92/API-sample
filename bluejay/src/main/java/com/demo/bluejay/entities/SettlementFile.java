@@ -1,5 +1,6 @@
 package com.demo.bluejay.entities;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.util.UUID;
 
@@ -32,7 +33,7 @@ public SettlementFile() {
 
 
     @Column(name="netamount")
-	    private Double netamount;
+	    private BigDecimal netamount;
 
 
     @Column(name="network")
@@ -50,11 +51,11 @@ public SettlementFile() {
     @Column(name="transactionIdFromSettlement")
 	    private Long transactionId;
 
-	public Double getNetamount() {
+	public BigDecimal getNetamount() {
 		return netamount;
 	}
 
-	public void setNetamount(Double netamount) {
+	public void setNetamount(BigDecimal netamount) {
 		this.netamount = netamount;
 	}
 
