@@ -13,6 +13,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -35,6 +36,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,9 +46,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.demo.bluejay.dao.MoviesDao;
 import com.demo.bluejay.dao.RecordDao;
 import com.demo.bluejay.dao.SettlementDao;
 import com.demo.bluejay.dao.TransactionDao;
+import com.demo.bluejay.entities.MovieDetail;
+import com.demo.bluejay.entities.Movies;
 import com.demo.bluejay.entities.Products;
 import com.demo.bluejay.entities.Record;
 import com.demo.bluejay.entities.SettlementFile;
@@ -71,6 +76,10 @@ public class MyController {
 	@Autowired
     private TransactionDao transactionRepository;
 	
+     @Autowired
+	 private MoviesDao movieRepository;
+
+	
 
 	@Autowired
     private SettlementDao settlementepository;
@@ -78,6 +87,19 @@ public class MyController {
 	@GetMapping("/home")
 	public String Home() {
 		return "Test First API Creation";
+	}
+	
+	@GetMapping("/")
+	public String HomePage() {
+		return "\n"
+				+ "Welocome to Bluejay\n"
+				+ "Sonali’s API Collection for test\n"
+				+ "\n"
+				+ "/upload Post \n"
+				+ "/products. Get\n"
+				+ "/products/{productId}  Get\n"
+				+ "/downlaod-csv. Get\n"
+				+ "/reconcile Post";
 	}
 	
 	//get the courses
@@ -97,7 +119,46 @@ public class MyController {
 			
 			return productServ.addProducts(product);
 		}
-	    
+	//////movie api's ////////////////
+	
+	@GetMapping("/movie")
+    public List<Movies> getAllMovies() {
+        return movieRepository.findAll();
+    }
+	
+	
+
+    @GetMapping("/movie/{id}")
+    public ResponseEntity<Movies> getMovieById(@PathVariable(value = "id") Long id) {
+        Optional<Movies> optionalMovie = movieRepository.findById(id);
+       
+            return ResponseEntity.ok().body(optionalMovie.get());
+        
+    }
+
+    @PostMapping("/movie")
+    public Movies createMovie(@RequestBody Movies movie) {
+        return movieRepository.save(movie);
+    }
+
+    
+
+    @DeleteMapping("/movie/{id}")
+    public ResponseEntity<Object> deleteMovie(@PathVariable(value = "id") Long id) {
+        Optional<Movies> optionalMovie = movieRepository.findById(id);
+        if (optionalMovie.isPresent()) {
+            movieRepository.deleteById(id);
+            return ResponseEntity.ok().body("Movie with id " + id + " deleted successfully");
+        } else {
+        	 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("movie not found");
+        }
+    }
+
+ 
+    
+    
+    
+	    ////////////Recon app////////////
 	   @PostMapping("/upload")
 	    public ResponseEntity<String> handleCsvUpload(@RequestParam("file") MultipartFile file)  {
 	        try {
